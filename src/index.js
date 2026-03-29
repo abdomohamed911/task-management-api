@@ -1,8 +1,3 @@
-/**
- * Task Management API - Entry Point
- * @author Abdelrahman Mohamed
- */
-
 const app = require('./app');
 const PORT = process.env.PORT || 3000;
 
