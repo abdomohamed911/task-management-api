@@ -7,3 +7,4 @@
 // Commit 7 - Improving code quality
 // Commit 8 - Improving code quality
 // Commit 9 - Improving code quality
+// Commit 10 - Improving code quality
