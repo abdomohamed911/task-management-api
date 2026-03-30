@@ -1,6 +1,6 @@
 {
   "name": "task-management-api",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "Production-grade REST API for task management with comprehensive testing and documentation",
   "main": "src/index.js",
   "scripts": {
@@ -11,7 +11,7 @@
     "test:integration": "jest tests/integration/",
     "test:watch": "jest --watch"
   },
-  "keywords": ["api", "rest", "task-management", "express", "nodejs"],
+  "keywords": ["api", "rest", "task-management", "express", "nodejs", "production-ready"],
   "author": "Abdelrahman Mohamed",
   "license": "MIT",
   "dependencies": {
