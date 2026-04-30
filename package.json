@@ -1,21 +1,35 @@
 {
   "name": "task-management-api",
-  "version": "1.0.1",
-  "description": "Production-grade REST API for task management with comprehensive testing and documentation",
+  "version": "1.1.0",
+  "description": "Production-grade REST API for task management with filtering, pagination, statistics, and comprehensive testing",
   "main": "src/index.js",
+  "engines": {
+    "node": ">=18.0.0",
+    "npm": ">=9.0.0"
+  },
   "scripts": {
     "start": "node src/index.js",
     "dev": "node --watch src/index.js",
-    "test": "jest --coverage",
-    "test:unit": "jest tests/unit/",
-    "test:integration": "jest tests/integration/",
+    "test": "jest --coverage --forceExit --detectOpenHandles",
+    "test:unit": "jest tests/unit/ --forceExit --detectOpenHandles",
+    "test:integration": "jest tests/integration/ --forceExit --detectOpenHandles",
     "test:watch": "jest --watch"
   },
-  "keywords": ["api", "rest", "task-management", "express", "nodejs", "production-ready"],
+  "keywords": [
+    "api",
+    "rest",
+    "task-management",
+    "express",
+    "nodejs",
+    "production-ready"
+  ],
   "author": "Abdelrahman Mohamed",
   "license": "MIT",
   "dependencies": {
+    "cors": "^2.8.6",
     "express": "^4.18.2",
+    "express-rate-limit": "^8.4.1",
+    "helmet": "^8.1.0",
     "uuid": "^9.0.0"
   },
   "devDependencies": {
