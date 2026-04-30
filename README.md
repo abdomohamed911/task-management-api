@@ -1,93 +1,115 @@
 # Task Management API
 
-A production-grade REST API for managing tasks and workflows. Built with Node.js, Express, and TypeScript, this API provides a complete, validated, and documented backend service that handles task creation, assignment, prioritization, and lifecycle management with comprehensive error handling and automated testing.
+[![CI](https://github.com/abdomohamed911/task-management-api/actions/workflows/ci.yml/badge.svg)](https://github.com/abdomohamed911/task-management-api/actions/workflows/ci.yml)
+
+A production-grade REST API for managing tasks with filtering, pagination, statistics, and comprehensive testing. Built with Node.js and Express following clean MVC architecture.
 
 ## Overview
 
-This API is designed as a foundational service that can be integrated into any task management frontend, project management tool, or automation pipeline. It implements strict input validation, structured error responses, pagination, filtering, and role-aware access patterns to serve as a reliable backend for production workloads.
-
-Every endpoint follows RESTful conventions, returns consistent JSON responses, and is covered by integration and unit tests to ensure reliability across deployments.
+This API provides a complete backend for task management with CRUD operations, status tracking, priority levels, and real-time statistics. Every endpoint follows RESTful conventions, returns consistent JSON responses, and is covered by 41 unit and integration tests. The architecture separates concerns across controllers, services, models, middleware, and routes for maintainability and testability.
 
 ## Features
 
 - **Full CRUD Operations** -- Create, read, update, and delete tasks with a clean RESTful interface
-- **Task Lifecycle Management** -- Status transitions (todo, in progress, completed) with validation rules preventing invalid state changes
-- **Priority Levels** -- Configurable priority tiers (low, medium, high, critical) with sorting and filtering support
-- **Input Validation** -- Comprehensive request validation at the controller and schema level, returning clear error messages for malformed input
-- **Pagination and Filtering** -- Query parameters for paginated results, field-based filtering, and configurable page sizes
-- **Structured Error Handling** -- Centralized error middleware returning consistent error objects with status codes, messages, and correlation details
-- **TypeScript Throughout** -- End-to-end type safety from route definitions through controllers to database models
-- **Automated Testing** -- Unit and integration test suites covering all endpoints, edge cases, and error paths
-- **API Documentation** -- Complete endpoint documentation with request/response schemas, query parameters, and usage examples
+- **Task Lifecycle Management** -- Status transitions (pending, in-progress, completed, cancelled) with validation
+- **Priority Levels** -- Low, medium, and high priority tiers with sorting and filtering support
+- **Input Validation** -- Request validation with clear error messages for malformed input
+- **Pagination and Filtering** -- Query parameters for paginated results, status/priority filtering, and configurable page sizes
+- **Task Statistics** -- Aggregated statistics by status and priority via `/api/v1/tasks/statistics`
+- **Structured Error Handling** -- Centralized error middleware with status-code-mapped error types
+- **Security** -- Helmet security headers, CORS configuration, and rate limiting (100 req/15min)
+- **Automated Testing** -- 41 tests across unit and integration suites with coverage reporting
+- **Docker Support** -- Multi-stage Dockerfile for production deployment
 
 ## Tech Stack
 
-| Category | Technology |
+| Layer | Technology |
 |---|---|
-| Runtime | Node.js |
-| Framework | Express |
-| Language | TypeScript |
-| Database | MongoDB |
-| ODM | Mongoose |
-| Validation | Express middleware + custom validators |
+| Runtime | Node.js 18+ |
+| Framework | Express 4 |
+| Language | JavaScript (ES Modules) |
+| Storage | In-memory Map (database-ready architecture) |
+| Security | Helmet, CORS, express-rate-limit |
+| Validation | Custom express middleware |
 | Testing | Jest, Supertest |
-| Documentation | Inline API docs |
+| CI/CD | GitHub Actions |
+| Containerization | Docker (multi-stage build) |
 
 ## Architecture
 
 ```
 task-management-api/
   src/
-    controllers/        # Request handlers with validation logic
-    models/             # Mongoose schemas and type definitions
+    controllers/        # Request handlers
+    models/             # Task model with validation
     routes/             # Express route definitions
-    middleware/         # Error handling, validation, logging
-    config/             # Database connection and environment config
-    types/              # Shared TypeScript interfaces and types
-    utils/              # Helper functions and utilities
-    tests/              # Unit and integration test suites
-  dist/                 # Compiled JavaScript output
+    services/           # Business logic and data access
+    middleware/         # Error handling, validation
+    utils/              # Pagination, ApiError
+    app.js              # Express app setup
+    index.js            # Server entry point
+  tests/
+    unit/               # Unit tests (services, pagination)
+    integration/        # Integration tests (API endpoints)
+  .github/workflows/    # CI pipeline
+  Dockerfile            # Production container
+  .env.example          # Environment template
 ```
 
 **Request Lifecycle:**
 
-1. Incoming request passes through middleware stack (logging, parsing, validation)
+1. Incoming request passes through middleware stack (helmet, CORS, rate limiting, JSON parsing)
 2. Route handler delegates to the appropriate controller
-3. Controller validates business rules and interacts with the database layer
-4. Database operations go through typed Mongoose models
+3. Controller validates input and delegates to the service layer
+4. Service layer applies business logic, filtering, sorting, and pagination
 5. Response is formatted and returned with consistent structure
 6. Errors are caught by the centralized error handler and returned as structured JSON
 
 ## API Endpoints
 
+### Health
+
+| Method | Endpoint | Description |
+|---|---|---|
+| GET | `/health` | Health check (returns `{ ok: true, timestamp }`) |
+
 ### Tasks
 
 | Method | Endpoint | Description |
 |---|---|---|
-| POST | `/api/tasks` | Create a new task |
-| GET | `/api/tasks` | List tasks with pagination and filters |
-| GET | `/api/tasks/:id` | Get a single task by ID |
-| PUT | `/api/tasks/:id` | Update an existing task |
-| DELETE | `/api/tasks/:id` | Delete a task |
+| POST | `/api/v1/tasks` | Create a new task |
+| GET | `/api/v1/tasks` | List tasks with pagination and filters |
+| GET | `/api/v1/tasks/statistics` | Get task statistics by status and priority |
+| GET | `/api/v1/tasks/:id` | Get a single task by ID |
+| PUT | `/api/v1/tasks/:id` | Update an existing task |
+| DELETE | `/api/v1/tasks/:id` | Delete a task |
 
-### Query Parameters (GET /api/tasks)
+### Query Parameters (GET /api/v1/tasks)
 
 | Parameter | Type | Description |
 |---|---|---|
 | `page` | number | Page number (default: 1) |
-| `limit` | number | Items per page (default: 10) |
-| `status` | string | Filter by status: todo, in-progress, completed |
-| `priority` | string | Filter by priority: low, medium, high, critical |
-| `sortBy` | string | Sort field (e.g., createdAt, priority, dueDate) |
-| `order` | string | Sort order: asc or desc |
+| `limit` | number | Items per page (default: 10, max: 100) |
+| `status` | string | Filter by status: pending, in-progress, completed, cancelled |
+| `priority` | string | Filter by priority: low, medium, high |
+| `sort` | string | Sort field (default: createdAt) |
 
 ### Response Format
 
 ```json
 {
   "success": true,
-  "data": { ... },
-  "message": "Task created successfully"
+  "data": {
+    "id": "uuid",
+    "title": "Task title",
+    "description": "Task description",
+    "status": "pending",
+    "priority": "medium",
+    "dueDate": "2025-01-15",
+    "tags": [],
+    "createdAt": "2025-01-01T00:00:00.000Z",
+    "updatedAt": "2025-01-01T00:00:00.000Z"
+  }
 }
 ```
 
@@ -98,41 +120,27 @@ task-management-api/
   "success": false,
   "error": {
     "code": "VALIDATION_ERROR",
-    "message": "Task title is required",
-    "details": [...]
+    "message": "Task title is required and must be a non-empty string"
   }
 }
 ```
 
-## Getting Started
+## Quick Start
 
 ### Prerequisites
 
-- Node.js 18 or later
-- MongoDB (local instance or MongoDB Atlas)
-- npm or yarn
+- Node.js 18+
 
-### Environment Variables
-
-Create a `.env` file in the project root:
-
-```
-PORT=3000
-MONGODB_URI=mongodb://localhost:27017/task-management
-NODE_ENV=development
-```
-
-### Installation
+### Setup
 
 ```bash
 git clone https://github.com/abdomohamed911/task-management-api.git
 cd task-management-api
+
+# Install dependencies
 npm install
-```
 
-### Run Locally
-
-```bash
+# Start development server
 npm run dev
 ```
 
@@ -141,26 +149,41 @@ The API server starts at `http://localhost:3000`.
 ### Run Tests
 
 ```bash
+# Run all tests with coverage
 npm test
+
+# Unit tests only
+npm run test:unit
+
+# Integration tests only
+npm run test:integration
 ```
 
-### Build for Production
+### Docker
 
 ```bash
-npm run build
-npm start
+# Build and run
+docker build -t task-api .
+docker run -p 3000:3000 -e CORS_ORIGIN=http://localhost:3000 task-api
 ```
 
-## Error Handling
+## Results
 
-The API implements a layered error handling strategy:
+| Metric | Value |
+|---|---|
+| Total tests | 41 (3 suites) |
+| Unit tests | 29 (service + pagination) |
+| Integration tests | 12 (all API endpoints) |
+| API endpoints | 7 (including health + statistics) |
+| Error types | 8 (400-500 status codes mapped) |
 
-- **Validation errors** return 400 with field-level detail messages
-- **Not found errors** return 404 with the resource identifier that was not found
-- **Duplicate entry errors** return 409 for conflicting resource creation
-- **Server errors** return 500 with a generic message in production, full details in development
+## What I Learned
 
-All errors are processed through a centralized middleware that ensures consistent response formatting and logs errors with context for monitoring.
+1. **In-memory storage is great for prototyping but hides real-world bugs**: The Map-based store made development fast, but it masked issues like shared state between tests. Adding a `resetStore()` function and calling it in `beforeEach` was essential for test isolation. In a real database, transactions or test database cleanup would serve the same purpose.
+
+2. **Custom error classes with status-code mapping improve API consistency**: Creating an `ApiError` class that automatically maps HTTP status codes to semantic error codes (VALIDATION_ERROR, NOT_FOUND, etc.) eliminates the need for ad-hoc error formatting in every controller. The centralized error handler then produces uniform responses across all endpoints.
+
+3. **Pagination logic has more edge cases than expected**: Negative limits, zero limits, NaN, and values exceeding the maximum all need handling. Normalizing these inputs before slicing prevents off-by-one errors and ensures the API contract is predictable for frontend consumers.
 
 ## License
 
